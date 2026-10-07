@@ -1,0 +1,721 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+/* The whole site is coloured from these nine values; everything else in this
+   file mixes them. The layout overrides them with the day's theme
+   (lib/themes.ts), so these are only a fallback. */
+@theme {
+    --color-ink: #0b181b;
+    --color-surface: #102428;
+    --color-raised: #18343a;
+    --color-line: color-mix(in srgb, var(--color-fg) 13%, transparent);
+    --color-fg: #edf1f2;
+    --color-dim: #a8b9bd;
+    --color-faint: #6b8085;
+    --color-accent: #2ec4b6;
+    --color-secondary: #ff6b6b;
+    --color-tertiary: #97e2db;
+    --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The page colour sits on <html> only, so the fixed backdrop (z-index -1) can
+   show through <body>. */
+html {
+    background: var(--color-ink);
+    scroll-padding-top: 3.5rem;
+}
+
+body {
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    overflow-x: clip;
+}
+
+::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+@layer components {
+    /* ---------- Backdrop ---------- */
+    .bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(to right, color-mix(in srgb, var(--color-fg) 5.5%, transparent) 1px, transparent 1px),
+            linear-gradient(to bottom, color-mix(in srgb, var(--color-fg) 5.5%, transparent) 1px, transparent 1px);
+        background-size: 72px 72px;
+        -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 15%, #000 15%, transparent 78%);
+        mask-image: radial-gradient(ellipse 90% 75% at 50% 15%, #000 15%, transparent 78%);
+    }
+
+    .bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        will-change: transform;
+    }
+
+    .bg-orb-a {
+        top: -22vw;
+        left: -14vw;
+        width: 62vw;
+        height: 62vw;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 62%);
+        animation: drift-a 26s ease-in-out infinite alternate;
+    }
+
+    .bg-orb-b {
+        top: 18vh;
+        right: -22vw;
+        width: 58vw;
+        height: 58vw;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 16%, transparent), transparent 62%);
+        animation: drift-b 32s ease-in-out infinite alternate;
+    }
+
+    .bg-orb-c {
+        bottom: -30vw;
+        left: 18vw;
+        width: 64vw;
+        height: 64vw;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-tertiary) 13%, transparent), transparent 62%);
+        animation: drift-c 38s ease-in-out infinite alternate;
+    }
+
+    /* Soft light that follows the pointer */
+    .bg-glow {
+        position: absolute;
+        top: -320px;
+        left: -320px;
+        width: 640px;
+        height: 640px;
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 7%, transparent), transparent 62%);
+        will-change: transform;
+    }
+
+    .bg-noise {
+        position: absolute;
+        inset: 0;
+        opacity: 0.045;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ---------- Type ---------- */
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-dim);
+    }
+
+    .eyebrow::before {
+        content: "";
+        width: 1.5rem;
+        height: 1px;
+        background: linear-gradient(to right, var(--color-accent), var(--color-secondary));
+    }
+
+    .headline {
+        font-weight: 600;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        text-wrap: balance;
+    }
+
+    .lede {
+        font-size: 1.0625rem;
+        line-height: 1.55;
+        letter-spacing: -0.01em;
+        color: var(--color-dim);
+        text-wrap: pretty;
+    }
+
+    @media (min-width: 768px) {
+        .lede {
+            font-size: 1.1875rem;
+        }
+    }
+
+    .text-gradient {
+        background: linear-gradient(100deg, var(--color-accent), var(--color-secondary) 60%, var(--color-tertiary) 125%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* Text with a soft blue highlight that sweeps across it */
+    .text-shine {
+        background: linear-gradient(
+            100deg,
+            var(--color-fg) 0%,
+            var(--color-fg) 38%,
+            var(--color-accent) 47%,
+            var(--color-secondary) 53%,
+            var(--color-fg) 62%,
+            var(--color-fg) 100%
+        );
+        background-size: 250% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shine 6s linear infinite;
+    }
+
+    /* ---------- Layout ---------- */
+    .section {
+        position: relative;
+        padding: 6.5rem 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .section {
+            padding: 9rem 2rem;
+        }
+    }
+
+    .wrap {
+        max-width: 72rem;
+        margin-inline: auto;
+    }
+
+    /* ---------- Surfaces ---------- */
+    .card {
+        position: relative;
+        border: 1px solid transparent;
+        border-radius: 1.5rem;
+        background:
+            linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+            linear-gradient(
+                    145deg,
+                    color-mix(in srgb, var(--color-accent) 45%, transparent),
+                    color-mix(in srgb, var(--color-fg) 5%, transparent) 35%,
+                    color-mix(in srgb, var(--color-fg) 5%, transparent) 65%,
+                    color-mix(in srgb, var(--color-secondary) 45%, transparent)
+                )
+                border-box;
+    }
+
+    /* Frosted glass: translucent, blurred, with a lit top edge */
+    .glass {
+        border: 1px solid color-mix(in srgb, var(--color-fg) 16%, transparent);
+        background: linear-gradient(145deg, color-mix(in srgb, var(--color-fg) 10%, transparent), color-mix(in srgb, var(--color-fg) 3%, transparent));
+        -webkit-backdrop-filter: blur(26px) saturate(150%);
+        backdrop-filter: blur(26px) saturate(150%);
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.14),
+            0 30px 80px -30px rgb(0 0 0 / 0.6);
+    }
+
+    .glass-row {
+        position: relative;
+        border: 1px solid color-mix(in srgb, var(--color-fg) 9%, transparent);
+        border-radius: 1.1rem;
+        background: color-mix(in srgb, var(--color-fg) 3.5%, transparent);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        cursor: pointer;
+        transition:
+            border-color 0.3s var(--ease-out-soft),
+            background-color 0.3s var(--ease-out-soft);
+    }
+
+    .glass-row:hover {
+        border-color: color-mix(in srgb, var(--color-fg) 22%, transparent);
+        background: color-mix(in srgb, var(--color-fg) 7%, transparent);
+    }
+
+    /* Highlight that slides between rows to mark the selected one */
+    .glass-row-active {
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 22%, transparent), color-mix(in srgb, var(--color-secondary) 14%, transparent));
+        box-shadow:
+            inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 50%, transparent),
+            inset 0 1px 0 rgb(255 255 255 / 0.12);
+    }
+
+    /* Soft coloured light placed behind glass panels, so the blur has something to work on */
+    .glow-accent {
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 38%, transparent), transparent 68%);
+    }
+
+    .glow-secondary {
+        border-radius: 50%;
+        background: radial-gradient(circle, color-mix(in srgb, var(--color-secondary) 28%, transparent), transparent 68%);
+    }
+
+    /* Swipeable rows keep their scrolling but lose the bar */
+    .no-scrollbar {
+        scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tilt-wrap {
+        perspective: 1100px;
+    }
+
+    .tilt-card {
+        overflow: hidden;
+        will-change: transform;
+    }
+
+    /* Light that tracks the pointer across the card */
+    .tilt-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(
+            420px circle at var(--mx, 50%) var(--my, 50%),
+            color-mix(in srgb, var(--color-accent) 14%, transparent),
+            transparent 60%
+        );
+        transition: opacity 0.4s;
+    }
+
+    .tilt-card:hover::before {
+        opacity: 1;
+    }
+
+    .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.75rem;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--color-dim);
+        white-space: nowrap;
+    }
+
+    .tag-accent {
+        border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+        background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+        color: var(--color-accent);
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.4rem 0.9rem;
+        border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--color-fg);
+    }
+
+    .badge-dot {
+        position: relative;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--color-accent);
+    }
+
+    .badge-dot::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--color-accent);
+        animation: ping 2s ease-out infinite;
+    }
+
+    .icon-tile {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 1px solid color-mix(in srgb, var(--color-accent) 25%, transparent);
+        border-radius: 0.85rem;
+        background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 20%, transparent), color-mix(in srgb, var(--color-secondary) 16%, transparent));
+        color: var(--color-accent);
+    }
+
+    /* ---------- Buttons and links ---------- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.4rem;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        cursor: pointer;
+        transition:
+            background-color 0.3s var(--ease-out-soft),
+            border-color 0.3s var(--ease-out-soft),
+            box-shadow 0.3s var(--ease-out-soft),
+            color 0.3s var(--ease-out-soft);
+    }
+
+    .btn-primary {
+        background: linear-gradient(100deg, var(--color-accent), var(--color-secondary));
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 8px 40px -8px color-mix(in srgb, var(--color-accent) 70%, transparent);
+    }
+
+    .btn-secondary {
+        border-color: color-mix(in srgb, var(--color-fg) 20%, transparent);
+        background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        color: var(--color-fg);
+    }
+
+    .btn-secondary:hover {
+        border-color: color-mix(in srgb, var(--color-accent) 65%, transparent);
+        background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    }
+
+    .text-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: var(--color-accent);
+        font-weight: 500;
+    }
+
+    .text-link:hover {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+
+    /* ---------- Navbar ---------- */
+    .nav {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 50;
+        border-bottom: 1px solid transparent;
+        transition:
+            background-color 0.4s var(--ease-out-soft),
+            border-color 0.4s var(--ease-out-soft);
+    }
+
+    .nav.is-solid {
+        border-bottom-color: var(--color-line);
+        background: color-mix(in srgb, var(--color-ink) 68%, transparent);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+    }
+
+    /* The open mobile menu needs a near-solid backing so the hero text does not show through */
+    .nav.is-open {
+        background: color-mix(in srgb, var(--color-ink) 96%, transparent);
+    }
+
+    .nav-progress {
+        position: absolute;
+        inset: auto 0 -1px 0;
+        height: 1px;
+        background: linear-gradient(to right, var(--color-accent), var(--color-secondary), var(--color-tertiary));
+        transform: scaleX(0);
+        transform-origin: left;
+    }
+
+    .nav-link {
+        position: relative;
+        font-size: 0.875rem;
+        color: var(--color-dim);
+        transition: color 0.3s;
+    }
+
+    .nav-link:hover,
+    .nav-link[aria-current="true"] {
+        color: var(--color-fg);
+    }
+
+    /* ---------- Hero ---------- */
+    .hero {
+        position: relative;
+        height: 300vh;
+    }
+
+    .hero-sticky {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        overflow: hidden;
+    }
+
+    .hero-scene {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .hero-stage {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 6.5rem 1.5rem 3rem;
+        text-align: center;
+    }
+
+    @media (min-width: 1024px) {
+        .hero-stage {
+            justify-content: center;
+            padding: 5rem 2rem 3rem;
+            text-align: left;
+        }
+    }
+
+    .hero-stage:not([data-stage="0"]) {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .role-rotator {
+        display: inline-grid;
+        overflow: hidden;
+        vertical-align: bottom;
+    }
+
+    .role-rotator > span {
+        grid-area: 1 / 1;
+        white-space: nowrap;
+    }
+
+    .scroll-cue {
+        position: absolute;
+        inset: auto 0 1.5rem 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        width: fit-content;
+        margin-inline: auto;
+        font-size: 0.75rem;
+        color: var(--color-faint);
+    }
+
+    .scroll-cue::after {
+        content: "";
+        width: 1px;
+        height: 2.25rem;
+        background: linear-gradient(to bottom, var(--color-accent), transparent);
+        animation: scroll-cue 2.4s ease-in-out infinite;
+    }
+
+    /* ---------- Recognition plaques ---------- */
+    .plaque-mark {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        aspect-ratio: 1;
+        border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+        border-radius: 1.1rem;
+        background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--color-accent) 20%, transparent), color-mix(in srgb, var(--color-accent) 2%, transparent) 70%);
+        color: var(--color-accent);
+    }
+
+    .rail-node {
+        position: absolute;
+        top: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+        border-radius: 50%;
+        background: var(--color-raised);
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        transform: translateX(-50%);
+    }
+
+    /* ---------- Marquee ---------- */
+    .marquee {
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+        mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    }
+
+    .marquee-track {
+        display: flex;
+        width: max-content;
+        will-change: transform;
+    }
+
+    .marquee-group {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 2.75rem;
+        padding-right: 2.75rem;
+    }
+
+    /* ---------- Segmented control ---------- */
+    .segmented {
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+    }
+
+    .segment {
+        position: relative;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-dim);
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .segment:hover,
+    .segment[aria-pressed="true"] {
+        color: var(--color-fg);
+    }
+
+    .segment-pill {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent);
+    }
+
+    /* ---------- Toast ---------- */
+    .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 1.5rem;
+        z-index: 60;
+        max-width: min(28rem, 90vw);
+        padding: 0.9rem 1.25rem;
+        border: 1px solid var(--color-line);
+        border-radius: 1rem;
+        background: color-mix(in srgb, var(--color-raised) 92%, transparent);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+        font-size: 0.875rem;
+        font-weight: 500;
+        word-break: break-all;
+        transform: translateX(-50%);
+        animation: toast-in 0.45s var(--ease-out-soft);
+    }
+}
+
+@keyframes drift-a {
+    to {
+        transform: translate(10vw, 8vh) scale(1.12);
+    }
+}
+
+@keyframes drift-b {
+    to {
+        transform: translate(-12vw, 10vh) scale(0.9);
+    }
+}
+
+@keyframes drift-c {
+    to {
+        transform: translate(8vw, -12vh) scale(1.1);
+    }
+}
+
+@keyframes ping {
+    to {
+        transform: scale(3.2);
+        opacity: 0;
+    }
+}
+
+@keyframes shine {
+    from {
+        background-position: 120% 0;
+    }
+    to {
+        background-position: -130% 0;
+    }
+}
+
+@keyframes spin-slow {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 24px);
+    }
+}
+
+@keyframes scroll-cue {
+    0% {
+        transform: scaleY(0);
+        transform-origin: top;
+    }
+    50% {
+        transform: scaleY(1);
+        transform-origin: top;
+    }
+    51% {
+        transform-origin: bottom;
+    }
+    100% {
+        transform: scaleY(0);
+        transform-origin: bottom;
+    }
+}
