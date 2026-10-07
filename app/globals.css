@@ -331,8 +331,6 @@ body {
         border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
         border-radius: 999px;
         background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-        -webkit-backdrop-filter: blur(12px);
-        backdrop-filter: blur(12px);
         font-size: 0.8125rem;
         font-weight: 500;
         color: var(--color-fg);
@@ -402,8 +400,6 @@ body {
     .btn-secondary {
         border-color: color-mix(in srgb, var(--color-fg) 20%, transparent);
         background: color-mix(in srgb, var(--color-fg) 4%, transparent);
-        -webkit-backdrop-filter: blur(12px);
-        backdrop-filter: blur(12px);
         color: var(--color-fg);
     }
 
@@ -520,6 +516,33 @@ body {
     .role-rotator > span {
         grid-area: 1 / 1;
         white-space: nowrap;
+    }
+
+    /* Only the first role shows until the script starts rotating them */
+    .role-rotator > span:not(:first-child) {
+        transform: translateY(110%);
+    }
+
+    /* Hero entrance. These are CSS animations on purpose: they begin with the
+       first paint and run off the main thread, so they stay smooth while the
+       page's JavaScript and the 3D scene are still starting up. */
+    .line-mask {
+        display: block;
+        overflow: hidden;
+        /* room for descenders, without changing the line spacing */
+        padding-bottom: 0.12em;
+        margin-bottom: -0.12em;
+    }
+
+    .char-rise {
+        display: inline-block;
+        animation: char-rise 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: calc(120ms + var(--i, 0) * 26ms);
+    }
+
+    .intro {
+        animation: intro-rise 0.9s var(--ease-out-soft) both;
+        animation-delay: calc(520ms + var(--i, 0) * 90ms);
     }
 
     .scroll-cue {
@@ -652,6 +675,19 @@ body {
         word-break: break-all;
         transform: translateX(-50%);
         animation: toast-in 0.45s var(--ease-out-soft);
+    }
+}
+
+@keyframes char-rise {
+    from {
+        transform: translateY(115%);
+    }
+}
+
+@keyframes intro-rise {
+    from {
+        opacity: 0;
+        transform: translateY(26px);
     }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { heroProgress } from '@/lib/hero-progress';
@@ -268,7 +268,7 @@ function buildStars(count: number) {
     return positions;
 }
 
-const Globe = () => {
+const Globe = ({ onReady }: { onReady: () => void }) => {
     const group = useRef<THREE.Group>(null);
     const stars = useRef<THREE.Points>(null);
     const ringA = useRef<THREE.Group>(null);
@@ -279,7 +279,12 @@ const Globe = () => {
     const spin = useRef(0);
     const pointer = useRef({ x: 0, y: 0 });
     const tilt = useRef({ x: 0, y: 0 });
+    const slowFrames = useRef(0);
 
+    const gl = useThree((state) => state.gl);
+    const scene = useThree((state) => state.scene);
+    const camera = useThree((state) => state.camera);
+    const setDpr = useThree((state) => state.setDpr);
     const size = useThree((state) => state.size);
     const viewport = useThree((state) => state.viewport);
     const compact = size.width < 1024;
@@ -335,6 +340,40 @@ const Globe = () => {
         materials.ringB.color.set(value('--color-secondary').trim());
     }, [uniforms, materials]);
 
+    // Compile the shaders before the first frame. Where the browser supports
+    // it this happens in parallel, so the page does not freeze while it runs;
+    // the render loop only starts once it has finished.
+    useEffect(() => {
+        let cancelled = false;
+        gl.compileAsync(scene, camera)
+            .catch(() => undefined)
+            .then(() => {
+                if (!cancelled) onReady();
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [gl, scene, camera, onReady]);
+
+    // Three poses, one per hero statement. On wide screens the globe sits
+    // opposite the text; on narrow ones it rises from the bottom edge behind it.
+    const poses = useMemo(() => {
+        const w = viewport.width;
+        const h = viewport.height;
+        const fit = compact ? Math.min(1, (w * 0.4) / RADIUS) : 1;
+        return compact
+            ? [
+                  { x: 0, y: -h * 0.37, s: fit },
+                  { x: 0, y: -h * 0.37, s: fit * 1.12 },
+                  { x: 0, y: -h * 0.16 - RADIUS * fit * 1.9, s: fit * 1.9 },
+              ]
+            : [
+                  { x: w * 0.23, y: -0.05, s: 1 },
+                  { x: -w * 0.23, y: -0.05, s: 1.1 },
+                  { x: 0, y: -h * 0.1 - RADIUS * 1.85, s: 1.85 },
+              ];
+    }, [viewport.width, viewport.height, compact]);
+
     useEffect(() => {
         const onMove = (e: PointerEvent) => {
             pointer.current.x = e.clientX / window.innerWidth - 0.5;
@@ -344,9 +383,19 @@ const Globe = () => {
         return () => window.removeEventListener('pointermove', onMove);
     }, []);
 
-    useFrame((state, delta) => {
+    useFrame((state, rawDelta) => {
         const g = group.current;
         if (!g) return;
+
+        // After a pause (a busy moment, or a return to the tab) one frame can
+        // report a long gap; capping it stops the globe from jumping.
+        const delta = Math.min(rawDelta, 0.05);
+
+        // On a GPU that cannot keep up, drop to one pixel per CSS pixel
+        if (viewport.dpr > 1 && appear.current === 1) {
+            slowFrames.current = rawDelta > 1 / 40 ? slowFrames.current + 1 : Math.max(0, slowFrames.current - 1);
+            if (slowFrames.current > 45) setDpr(1);
+        }
 
         const step = Math.min(1, delta * 4);
         eased.current += (heroProgress.value - eased.current) * step;
@@ -364,22 +413,6 @@ const Globe = () => {
         // Dimmer on narrow screens, where the globe sits behind the text
         uniforms.uOpacity.value = intro * (compact ? 0.75 : 1);
 
-        // Three poses, one per hero statement. On wide screens the globe sits
-        // opposite the text; on narrow ones it rises from the bottom edge behind it.
-        const w = viewport.width;
-        const h = viewport.height;
-        const fit = compact ? Math.min(1, (w * 0.4) / RADIUS) : 1;
-        const poses = compact
-            ? [
-                  { x: 0, y: -h * 0.37, s: fit },
-                  { x: 0, y: -h * 0.37, s: fit * 1.12 },
-                  { x: 0, y: -h * 0.16 - RADIUS * fit * 1.9, s: fit * 1.9 },
-              ]
-            : [
-                  { x: w * 0.23, y: -0.05, s: 1 },
-                  { x: -w * 0.23, y: -0.05, s: 1.1 },
-                  { x: 0, y: -h * 0.1 - RADIUS * 1.85, s: 1.85 },
-              ];
         const a = smooth(0.14, 0.4, p);
         const b = smooth(0.52, 0.8, p);
         const mix = (k: 'x' | 'y' | 's') => {
@@ -463,6 +496,8 @@ const Globe = () => {
 const HeroScene = () => {
     const container = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(true);
+    const [compiled, setCompiled] = useState(false);
+    const onReady = useCallback(() => setCompiled(true), []);
 
     useEffect(() => {
         // Stop rendering once the hero has scrolled out of view
@@ -474,13 +509,13 @@ const HeroScene = () => {
     return (
         <div ref={container} className="hero-scene" aria-hidden="true">
             <Canvas
-                dpr={[1, 1.75]}
+                dpr={[1, 1.5]}
                 camera={{ position: [0, 0, 7.5], fov: 35 }}
-                gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-                frameloop={visible ? 'always' : 'never'}
+                gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+                frameloop={visible && compiled ? 'always' : 'never'}
                 style={{ pointerEvents: 'none' }}
             >
-                <Globe />
+                <Globe onReady={onReady} />
             </Canvas>
         </div>
     );

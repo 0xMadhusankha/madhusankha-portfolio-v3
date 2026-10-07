@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
 import { ArrowRight } from 'lucide-react';
 import Counter from './Counter';
 import Magnetic from './Magnetic';
-import { gsap, SplitText, useGSAP } from '@/lib/gsap';
+import { gsap, useGSAP } from '@/lib/gsap';
 import { heroProgress } from '@/lib/hero-progress';
 
 // three.js is only needed for the globe, so it loads after the text is on screen
@@ -13,24 +13,38 @@ const HeroScene = dynamic(() => import('./HeroScene'), { ssr: false });
 
 const ROLES = ['SOC Analyst', 'Penetration Tester', 'CTF Developer', 'Bug Bounty Hunter', 'Security Researcher'];
 
+// The name, one array entry per line; each letter rises on its own
+const NAME = ['Madhusankha', 'Nayanajith'];
+
 interface HeroProps {
     counts: { certificates: number; projects: number };
 }
 
 const Hero = ({ counts }: HeroProps) => {
     const root = useRef<HTMLElement>(null);
+    const [sceneReady, setSceneReady] = useState(false);
+
+    // The globe starts once the browser is idle, so loading three.js and
+    // compiling its shaders never competes with the page starting up.
+    useEffect(() => {
+        const start = () => setSceneReady(true);
+        if ('requestIdleCallback' in window) {
+            const id = window.requestIdleCallback(start, { timeout: 1500 });
+            return () => window.cancelIdleCallback(id);
+        }
+        const id = setTimeout(start, 400);
+        return () => clearTimeout(id);
+    }, []);
 
     useGSAP(
         () => {
-            // Entrance: the name rises letter by letter, then the rest follows
-            const title = SplitText.create('[data-hero-title]', { type: 'lines,words,chars', mask: 'lines' });
-            gsap.timeline({ defaults: { ease: 'power4.out' }, delay: 0.15 })
-                .from(title.chars, { yPercent: 115, duration: 1.1, stagger: 0.028 })
-                .from('[data-intro]', { autoAlpha: 0, y: 26, duration: 0.9, stagger: 0.09 }, '-=0.75');
+            // The entrance itself is CSS (see .char-rise and .intro in globals.css):
+            // it starts with the first paint and keeps running smoothly even
+            // while JavaScript is busy.
 
-            // Rotating role line
+            // Rotating role line. CSS already parks every role but the first below the line.
             const roles = gsap.utils.toArray<HTMLElement>('[data-role]');
-            gsap.set(roles.slice(1), { yPercent: 110 });
+            gsap.set(roles.slice(1), { y: 0, yPercent: 110 });
             const rotation = gsap.timeline({ repeat: -1, defaults: { duration: 0.7, ease: 'power3.inOut' } });
             roles.forEach((role, i) => {
                 const next = roles[(i + 1) % roles.length];
@@ -60,25 +74,34 @@ const Hero = ({ counts }: HeroProps) => {
     return (
         <section id="home" ref={root} className="hero">
             <div className="hero-sticky">
-                <HeroScene />
+                {sceneReady && <HeroScene />}
 
                 <div className="hero-stage" data-stage="0">
                     <div className="wrap w-full">
                         <div className="mx-auto max-w-2xl lg:mx-0">
-                            <p className="badge" data-intro>
+                            <p className="badge intro [--i:0]">
                                 <span className="badge-dot" />
                                 Recognised by NASA · Hall of Fame
                             </p>
                             <h1
                                 className="headline mt-5 text-[clamp(2.75rem,min(7vw,11.5vh),5.25rem)]"
-                                data-hero-title
-                                aria-label="Madhusankha Nayanajith"
+                                aria-label={NAME.join(' ')}
                             >
-                                Madhusankha
-                                <br />
-                                Nayanajith
+                                {NAME.map((word, line) => (
+                                    <span key={word} className="line-mask" aria-hidden="true">
+                                        {[...word].map((char, i) => (
+                                            <span
+                                                key={i}
+                                                className="char-rise"
+                                                style={{ '--i': line * NAME[0].length + i } as CSSProperties}
+                                            >
+                                                {char}
+                                            </span>
+                                        ))}
+                                    </span>
+                                ))}
                             </h1>
-                            <p className="mt-4 text-xl font-medium tracking-tight md:text-2xl" data-intro>
+                            <p className="intro mt-4 text-xl font-medium tracking-tight [--i:1] md:text-2xl">
                                 <span className="role-rotator">
                                     {ROLES.map((role) => (
                                         <span key={role} className="text-gradient" data-role>
@@ -87,11 +110,11 @@ const Hero = ({ counts }: HeroProps) => {
                                     ))}
                                 </span>
                             </p>
-                            <p className="lede mx-auto mt-4 max-w-lg lg:mx-0" data-intro>
+                            <p className="lede intro mx-auto mt-4 max-w-lg [--i:2] lg:mx-0">
                                 I build secure infrastructure and break logical flaws, from SOC operations to CTF
                                 design and bug bounty.
                             </p>
-                            <div className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start" data-intro>
+                            <div className="intro mt-7 flex flex-wrap justify-center gap-3 [--i:3] lg:justify-start">
                                 <Magnetic>
                                     <a href="#projects" className="btn btn-primary">
                                         View my work <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -104,8 +127,7 @@ const Hero = ({ counts }: HeroProps) => {
                                 </Magnetic>
                             </div>
                             <dl
-                                className="mx-auto mt-8 flex w-fit justify-center gap-10 border-t border-line pt-5 lg:mx-0 lg:justify-start"
-                                data-intro
+                                className="intro mx-auto mt-8 flex w-fit justify-center gap-10 border-t border-line pt-5 [--i:4] lg:mx-0 lg:justify-start"
                             >
                                 <div>
                                     <dd className="text-3xl font-semibold tracking-tight md:text-4xl">
@@ -128,7 +150,7 @@ const Hero = ({ counts }: HeroProps) => {
                             </dl>
                         </div>
                     </div>
-                    <span className="scroll-cue !hidden lg:!flex" data-intro>
+                    <span className="scroll-cue intro !hidden [--i:5] lg:!flex">
                         Scroll
                     </span>
                 </div>
