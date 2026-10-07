@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, type CSSProperties } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
 import { ArrowRight } from 'lucide-react';
 import Counter from './Counter';
@@ -26,11 +26,6 @@ interface HeroProps {
 
 const Hero = ({ counts }: HeroProps) => {
     const root = useRef<HTMLElement>(null);
-
-    // The 3D engine needs a second or so to start. Until its first frame is
-    // ready, a CSS stand-in holds the globe's place so the hero is never empty.
-    const [sceneLive, setSceneLive] = useState(false);
-    const onSceneLive = useCallback(() => setSceneLive(true), []);
 
     useGSAP(
         () => {
@@ -70,8 +65,7 @@ const Hero = ({ counts }: HeroProps) => {
     return (
         <section id="home" ref={root} className="hero">
             <div className="hero-sticky">
-                <div className={`globe-poster ${sceneLive ? 'is-hidden' : ''}`} aria-hidden="true" />
-                <HeroScene onLive={onSceneLive} />
+                <HeroScene />
 
                 <div className="hero-stage" data-stage="0">
                     <div className="wrap w-full">

@@ -422,7 +422,7 @@ const Globe = ({ onReady }: { onReady: () => void }) => {
         };
 
         g.position.set(mix('x'), mix('y'), 0);
-        g.scale.setScalar(mix('s'));
+        g.scale.setScalar(mix('s') * (0.82 + 0.18 * intro));
         g.rotation.y = spin.current + p * 2.4;
         g.rotation.x = 0.28 + tilt.current.y * 0.25;
         g.rotation.z = -0.12 + tilt.current.x * -0.12;
@@ -494,14 +494,11 @@ const Globe = ({ onReady }: { onReady: () => void }) => {
     );
 };
 
-const HeroScene = ({ onLive }: { onLive?: () => void }) => {
+const HeroScene = () => {
     const container = useRef<HTMLDivElement>(null);
     const [visible, setVisible] = useState(true);
     const [compiled, setCompiled] = useState(false);
-    const onReady = useCallback(() => {
-        setCompiled(true);
-        onLive?.();
-    }, [onLive]);
+    const onReady = useCallback(() => setCompiled(true), []);
 
     useEffect(() => {
         // Stop rendering once the hero has scrolled out of view

@@ -484,64 +484,6 @@ body {
         pointer-events: none;
     }
 
-    /* Stand-in for the WebGL globe, shown from the first paint and faded out
-       when the real one is ready. Its position and size mirror the globe's
-       first pose in HeroScene.tsx: centred 23% right of the middle and 63.4%
-       of the viewport height across on wide screens; centred near the bottom
-       on narrow ones. */
-    .globe-poster {
-        position: absolute;
-        top: calc(50% + 1svh);
-        left: 73%;
-        width: 63.4svh;
-        aspect-ratio: 1;
-        translate: -50% -50%;
-        border-radius: 50%;
-        pointer-events: none;
-        background: radial-gradient(
-            circle at 38% 32%,
-            color-mix(in srgb, var(--color-accent) 16%, var(--color-ink)),
-            var(--color-ink) 62%
-        );
-        box-shadow:
-            0 0 90px 6px color-mix(in srgb, var(--color-accent) 30%, transparent),
-            0 0 0 1px color-mix(in srgb, var(--color-accent) 30%, transparent),
-            inset 0 0 50px color-mix(in srgb, var(--color-secondary) 28%, transparent);
-        /* "backwards", not "both": once the entrance has finished the animation
-           must let go of opacity, or the fade-out below could not run */
-        animation: poster-in 0.9s var(--ease-out-soft) backwards;
-        transition: opacity 0.6s ease-out;
-    }
-
-    /* A patch of dots, hinting at the surface the real globe has */
-    .globe-poster::before {
-        content: "";
-        position: absolute;
-        inset: 6%;
-        border-radius: 50%;
-        background-image: radial-gradient(
-            circle,
-            color-mix(in srgb, var(--color-accent) 75%, #fff) 1px,
-            transparent 1.6px
-        );
-        background-size: 10px 10px;
-        -webkit-mask-image: radial-gradient(circle at 36% 34%, #000 5%, transparent 58%);
-        mask-image: radial-gradient(circle at 36% 34%, #000 5%, transparent 58%);
-        opacity: 0.6;
-    }
-
-    .globe-poster.is-hidden {
-        opacity: 0;
-    }
-
-    @media (max-width: 1023.98px) {
-        .globe-poster {
-            top: 87%;
-            left: 50%;
-            width: min(63.4svh, 80vw);
-        }
-    }
-
     .hero-stage {
         position: absolute;
         inset: 0;
@@ -733,13 +675,6 @@ body {
         word-break: break-all;
         transform: translateX(-50%);
         animation: toast-in 0.45s var(--ease-out-soft);
-    }
-}
-
-@keyframes poster-in {
-    from {
-        opacity: 0;
-        scale: 0.92;
     }
 }
 
