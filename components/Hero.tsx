@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import dynamic from 'next/dynamic';
 import { ArrowRight } from 'lucide-react';
 import Counter from './Counter';
@@ -8,8 +8,12 @@ import Magnetic from './Magnetic';
 import { gsap, useGSAP } from '@/lib/gsap';
 import { heroProgress } from '@/lib/hero-progress';
 
-// three.js is only needed for the globe, so it loads after the text is on screen
-const HeroScene = dynamic(() => import('./HeroScene'), { ssr: false });
+// three.js is only needed for the globe, so it stays out of the page's main
+// bundle. The download starts as soon as this file runs, rather than waiting
+// for React to render the hero, so the globe is ready as early as possible.
+const loadScene = () => import('./HeroScene');
+if (typeof window !== 'undefined') void loadScene();
+const HeroScene = dynamic(loadScene, { ssr: false });
 
 const ROLES = ['SOC Analyst', 'Penetration Tester', 'CTF Developer', 'Bug Bounty Hunter', 'Security Researcher'];
 
@@ -22,19 +26,6 @@ interface HeroProps {
 
 const Hero = ({ counts }: HeroProps) => {
     const root = useRef<HTMLElement>(null);
-    const [sceneReady, setSceneReady] = useState(false);
-
-    // The globe starts once the browser is idle, so loading three.js and
-    // compiling its shaders never competes with the page starting up.
-    useEffect(() => {
-        const start = () => setSceneReady(true);
-        if ('requestIdleCallback' in window) {
-            const id = window.requestIdleCallback(start, { timeout: 1500 });
-            return () => window.cancelIdleCallback(id);
-        }
-        const id = setTimeout(start, 400);
-        return () => clearTimeout(id);
-    }, []);
 
     useGSAP(
         () => {
@@ -74,7 +65,7 @@ const Hero = ({ counts }: HeroProps) => {
     return (
         <section id="home" ref={root} className="hero">
             <div className="hero-sticky">
-                {sceneReady && <HeroScene />}
+                <HeroScene />
 
                 <div className="hero-stage" data-stage="0">
                     <div className="wrap w-full">

@@ -399,7 +399,8 @@ const Globe = ({ onReady }: { onReady: () => void }) => {
 
         const step = Math.min(1, delta * 4);
         eased.current += (heroProgress.value - eased.current) * step;
-        appear.current = Math.min(1, appear.current + delta * 0.7);
+        // Fade in over about half a second once the first frame is ready
+        appear.current = Math.min(1, appear.current + delta * 1.8);
         tilt.current.x += (pointer.current.x - tilt.current.x) * step * 0.5;
         tilt.current.y += (pointer.current.y - tilt.current.y) * step * 0.5;
         spin.current += delta * 0.07;
