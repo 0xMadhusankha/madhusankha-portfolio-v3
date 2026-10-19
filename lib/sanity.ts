@@ -41,11 +41,16 @@ export interface Skill {
 export const sanityLoader: ImageLoader = ({ src, width, quality }) =>
     `${src}?w=${width}&q=${quality || 75}&auto=format&fit=max`;
 
+/** Cache tag on every Sanity request, cleared by the publish webhook (app/api/revalidate). */
+export const SANITY_TAG = 'sanity';
+
 // In development every request asks Sanity again, so an edit in the Studio
-// shows on the next refresh. In production pages are rebuilt at most once a
-// minute, so a published change appears within about a minute.
+// shows on the next refresh. In production the publish webhook clears the
+// cache straight away; the one-minute refresh is a fallback.
 const FETCH_OPTIONS: RequestInit =
-    process.env.NODE_ENV === 'development' ? { cache: 'no-store' } : { next: { revalidate: 60 } };
+    process.env.NODE_ENV === 'development'
+        ? { cache: 'no-store' }
+        : { next: { revalidate: 60, tags: [SANITY_TAG] } };
 
 async function query<T>(groq: string): Promise<T> {
     const res = await fetch(`${QUERY_URL}?query=${encodeURIComponent(groq)}`, FETCH_OPTIONS);
