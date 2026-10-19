@@ -1,12 +1,11 @@
-import Image from 'next/image';
 import { ArrowUpRight, FileText, Plus, ShieldCheck } from 'lucide-react';
 import Counter from './Counter';
 import RailFill from './RailFill';
 import Reveal from './Reveal';
+import SanityImage from './SanityImage';
 import SectionHeading from './SectionHeading';
 import TiltCard from './TiltCard';
 import type { BountyEntry } from '@/content/bug-bounty';
-import { sanityLoader } from '@/lib/sanity';
 
 const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
@@ -125,8 +124,7 @@ const BugBounty = ({ entries }: { entries: BountyEntry[] }) => (
                                             >
                                                 {entry.letterImage ? (
                                                     <span className="letter-thumb">
-                                                        <Image
-                                                            loader={sanityLoader}
+                                                        <SanityImage
                                                             src={entry.letterImage}
                                                             alt=""
                                                             fill
