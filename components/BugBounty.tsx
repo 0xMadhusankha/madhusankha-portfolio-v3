@@ -1,10 +1,12 @@
-import { ArrowUpRight, Plus, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowUpRight, FileText, Plus, ShieldCheck } from 'lucide-react';
 import Counter from './Counter';
 import RailFill from './RailFill';
 import Reveal from './Reveal';
 import SectionHeading from './SectionHeading';
 import TiltCard from './TiltCard';
 import type { BountyEntry } from '@/content/bug-bounty';
+import { sanityLoader } from '@/lib/sanity';
 
 const monthFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
@@ -114,6 +116,42 @@ const BugBounty = ({ entries }: { entries: BountyEntry[] }) => (
                                                 </a>
                                             )}
                                         </div>
+                                        {(entry.letterUrl || entry.letterImage) && (
+                                            <a
+                                                href={(entry.letterUrl || entry.letterImage)!}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="letter-link group mt-6"
+                                            >
+                                                {entry.letterImage ? (
+                                                    <span className="letter-thumb">
+                                                        <Image
+                                                            loader={sanityLoader}
+                                                            src={entry.letterImage}
+                                                            alt=""
+                                                            fill
+                                                            sizes="4rem"
+                                                            className="object-cover object-top"
+                                                        />
+                                                    </span>
+                                                ) : (
+                                                    <span className="letter-thumb grid place-items-center text-accent">
+                                                        <FileText className="h-5 w-5" aria-hidden="true" />
+                                                    </span>
+                                                )}
+                                                <span className="min-w-0">
+                                                    <span className="block font-medium">Read the letter</span>
+                                                    <span className="block text-sm text-dim">
+                                                        Signed by {entry.program}
+                                                        {entry.letterUrl ? ' · PDF' : ''}
+                                                    </span>
+                                                </span>
+                                                <ArrowUpRight
+                                                    className="ml-auto h-4 w-4 shrink-0 text-accent transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                                                    aria-hidden="true"
+                                                />
+                                            </a>
+                                        )}
                                     </div>
                                 </article>
                             </TiltCard>

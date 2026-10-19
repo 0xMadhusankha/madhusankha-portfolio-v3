@@ -71,7 +71,8 @@ export function getCertificates() {
 export function getRecognitions() {
     return query<BountyEntry[]>(`*[_type == "recognition"] | order(date desc) {
         program, title, summary, date, url,
-        "label": coalesce(label, "Recognition"), "badges": coalesce(badges, [])
+        "label": coalesce(label, "Recognition"), "badges": coalesce(badges, []),
+        "letterUrl": letter.asset->url, "letterImage": letterImage.asset->url
     }`);
 }
 

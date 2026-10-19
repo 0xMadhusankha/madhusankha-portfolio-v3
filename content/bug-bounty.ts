@@ -17,6 +17,10 @@ export interface BountyEntry {
     badges?: string[];
     /** Public proof: hall of fame page, disclosed report or write-up. */
     url?: string | null;
+    /** A letter of recognition or recommendation (PDF). */
+    letterUrl?: string | null;
+    /** Image of the letter's first page, shown as a thumbnail. Must be on cdn.sanity.io. */
+    letterImage?: string | null;
 }
 
 export const bountyEntries: BountyEntry[] = [

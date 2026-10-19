@@ -55,6 +55,19 @@ export default defineType({
             type: 'url',
             description: 'Hall of fame page, disclosed report or write-up.',
         }),
+        defineField({
+            name: 'letter',
+            title: 'Letter (PDF)',
+            type: 'file',
+            options: { accept: 'application/pdf' },
+            description: 'A letter of recognition or recommendation. Opens in a new tab from the card.',
+        }),
+        defineField({
+            name: 'letterImage',
+            title: 'Letter preview',
+            type: 'image',
+            description: 'An image of the letter’s first page, shown as a thumbnail on the card.',
+        }),
     ],
     orderings: [{ title: 'Newest first', name: 'dateDesc', by: [{ field: 'date', direction: 'desc' }] }],
     preview: {
