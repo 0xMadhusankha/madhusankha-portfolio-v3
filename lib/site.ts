@@ -4,7 +4,7 @@ export const site = {
     fullName: 'H. Madhusankha Nayanajith',
     handle: '0xMadhusankha',
     role: 'Security Analyst & CTF Developer',
-    email: 'madhusankanayanajith@gmail.com',
+    email: 'hello@madhusankha.com',
     university: 'South Eastern University of Sri Lanka',
     /** The weekday that picks the day's colour theme is counted in this zone. */
     timeZone: 'Asia/Colombo',
