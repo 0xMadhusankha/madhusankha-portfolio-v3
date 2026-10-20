@@ -13,6 +13,12 @@ const csp = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Don't announce the framework in an X-Powered-By header
+    poweredByHeader: false,
+    // security.txt lives under /.well-known (RFC 9116); the old root location points there
+    async redirects() {
+        return [{ source: '/security.txt', destination: '/.well-known/security.txt', permanent: true }];
+    },
     async headers() {
         return [
             {
