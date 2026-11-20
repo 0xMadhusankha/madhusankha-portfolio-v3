@@ -43,14 +43,10 @@ const About = () => (
                 <div>
                     <Reveal>
                         <p className="text-2xl font-medium leading-snug tracking-tight md:text-[1.75rem]">
-                            I&apos;m Madhusankha, a security analyst focused on{' '}
-                            <span className="text-gradient">defensive security</span>, networking and CTF
-                            development.
+                            I&apos;m a <span className="text-gradient">cybersecurity enthusiast</span> and BICT undergraduate at {site.university}.
                         </p>
                         <p className="lede mt-6">
-                            I run a home SOC lab, write security tooling in C, design CTF challenges for other
-                            people to break, and hunt for vulnerabilities on public disclosure programmes. I&apos;m
-                            currently a BICT undergraduate at {site.university}.
+                            I build and experiment with SOC and SOAR environments, develop CTF challenges designed to test others, and hunt for vulnerabilities through public disclosure programmes. My interests span security operations, threat detection, digital forensics, vulnerability research, and building practical security solutions.
                         </p>
                     </Reveal>
 
